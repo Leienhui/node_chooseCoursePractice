@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选课</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">选修课选课系统</a>
+        <ul class="nav justify-content-end">
+            <li class="nav-item">
+                <a class="nav-link" href="#">用户名:
+                    <span id="username">雷恩慧</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">学号:
+                    <span id="xuehao">16104124</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">已选:
+                    <span id="courseNum">2</span>/2门
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/logout" class="btn btn-info">退出登录</a>
+            </li>
+        </ul>
+    </nav>
+    <div class="container" id="formDiv">
+        <div>
+            <div class="form-check form-check-inline">
+                请选择星期：
+                <input class="form-check-input" type="checkbox" value="1" name="xingqiji">
+                <label class="form-check-label">周一</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" value="2" name="xingqiji">
+                <label class="form-check-label">周二</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" value="3" name="xingqiji">
+                <label class="form-check-label">周三</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" value="4" name="xingqiji">
+                <label class="form-check-label">周四</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" value="5" name="xingqiji">
+                <label class="form-check-label">周五</label>
+            </div>
+        </div>
+        <div>
+            <div class="form-check form-check-inline">
+                请选择年级：
+                <input class="form-check-input" type="radio" name="nianjixianzhi" value="1">大一
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="nianjixianzhi" value="2">大二
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="nianjixianzhi" value="3">大三
+            </div>
+        </div>
+        <div>
+            <div class="form-check form-check-inline">
+                请选择类型：
+                <input class="form-check-input" type="checkbox" name="leixing" value="音乐">音乐
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="leixing" value="人文">人文
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" name="leixing" value="外语"> 外语
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="./js/myTable.js"></script>
+    <script>
+        let formDiv = document.getElementById('formDiv');
+        let table = new Mytable({
+            el: formDiv,
+        });
+        // 发起ajax请求课程
+        function loadCourse() {
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        let dataArr = JSON.parse(xhr.responseText);
+                        table.render(dataArr);
+                        // console.log(2)
+                    } else if (xhr.status == 401) {
+                        window.location = "/login.html";
+                    }
+
+                }
+                // console.log(1)
+            }
+            xhr.open('GET', '/course', true)
+            xhr.send();
+            // table.render(result);
+        }
+        loadCourse();
+        // 请求用户信息
+        function loadUserInfo() {
+            let username = document.getElementById('username');
+            let xuehao = document.getElementById('xuehao');
+            let courseNum = document.getElementById('courseNum');
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    // console.log(xhr.status)
+                    if (xhr.status == 200) {
+                        let userInfo = JSON.parse(xhr.responseText);
+                        // console.log(userInfo.id + 'id')
+                        // console.log(userInfo.nianji + '年级')
+                        username.innerText = userInfo.name;
+                        xuehao.innerText = userInfo.id;
+                        let count = 0;
+                        console.log(typeof userInfo.xuanke1)
+                        console.log(typeof userInfo.xuanke2)
+                        if (userInfo.xuanke1 != 0 && userInfo.xuanke1 != '') count++;
+                        if (userInfo.xuanke2 != 0 && userInfo.xuanke2 != '') count++;
+                        console.log(count)
+                        courseNum.innerText = count;
+                    } else if (xhr.status == 401) {
+                        // 重定向
+                        window.Location = "/login.html";
+                    }
+                }
+            }
+            xhr.open('get', '/user', true)
+            xhr.send();
+        }
+        loadUserInfo();
+        formDiv.onclick = function (e) {
+            // 前端筛选
+            let inputleixing = document.querySelectorAll('input[name="leixing"]');
+            let inputxingqiji = document.querySelectorAll('input[name="xingqiji"]');
+            let obj = {
+                nianjixianzhi: '',
+                xingqiji: [],
+                leixing: []
+            }
+            if (e.target.nodeName.toLowerCase() == 'input' && e.target.name == 'nianjixianzhi') {
+                obj.nianjixianzhi = e.target.value;
+            }
+            if (e.target.nodeName.toLowerCase() == 'input' && e.target.name == 'xingqiji') {
+                obj.xingqiji.push(e.target.value);
+            }
+            if (e.target.nodeName.toLowerCase() == 'input' && e.target.name == 'leixing') {
+                obj.leixing.push(e.target.value);
+            }
+            // 点击报名的时候发送请求
+            if (e.target.nodeName.toLowerCase() == 'input' && e.target.getAttribute(
+                    'data-baoming') == 'baoming') {
+
+                let id = e.target.getAttribute('data-id');
+                
+
+                let xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4) {
+                        let data = xhr.responseText;
+                       if(data == '更新成功'){
+
+                       }
+                        loadUserInfo();
+                    }
+                }
+                xhr.open('get', '/baoming?id=' + id);
+                xhr.send();
+            }
+            console.log(obj);
+            table.chooseCourse(obj);
+
+        }
+    </script>
+</body>
+
+</html>
